@@ -23,7 +23,9 @@ export class Player{
   update(dt){const k=this.k,y=this.yaw,p=this.body.position,v=this.body.velocity;
     const f=(k.KeyW?1:0)-(k.KeyS?1:0),s=(k.KeyD?1:0)-(k.KeyA?1:0);
     let wx=-Math.sin(y)*f+Math.cos(y)*s,wz=-Math.cos(y)*f-Math.sin(y)*s;const l=Math.hypot(wx,wz);if(l>1){wx/=l;wz/=l}wx*=6;wz*=6;
-    this.rr.reset();this.grounded=this.c.world.raycastClosest(new CANNON.Vec3(p.x,p.y,p.z),new CANNON.Vec3(p.x,p.y-.62,p.z),{collisionFilterMask:1,skipBackfaces:true},this.rr);
+    this.rr.reset();let g=this.c.world.raycastClosest(new CANNON.Vec3(p.x,p.y,p.z),new CANNON.Vec3(p.x,p.y-.7,p.z),{collisionFilterMask:1,skipBackfaces:true},this.rr);
+    for(const q of this.c.world.contacts){const a=q.bi===this.body;if((a||q.bj===this.body)&&(a?-q.ni.y:q.ni.y)>.6){g=true;break}} // contact fallback, the ray alone wasn't reliable
+    this.grounded=g;
     if(this.grounded){v.x=wx;v.z=wz;if(k.Space)v.y=8}
     else{const m=Math.max(Math.hypot(v.x,v.z),6);v.x+=wx*dt*4;v.z+=wz*dt*4;const s2=Math.hypot(v.x,v.z);if(s2>m){v.x*=m/s2;v.z*=m/s2}} // air control never kills fling momentum
     this.since+=dt;if(this.since>4&&this.h<100){this.h=Math.min(100,this.h+dt*10);this.c.ui.hp(this.h)}
