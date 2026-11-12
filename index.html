@@ -14,6 +14,7 @@ canvas{display:block}
 #hint{position:absolute;left:16px;top:36px;max-width:420px;opacity:.8}
 #hp{position:absolute;left:16px;bottom:16px;width:180px;height:10px;background:#0008;border:1px solid #fff6}
 #hpf{display:block;height:100%;width:100%;background:#e44}
+#fade{position:absolute;inset:0;background:#000;opacity:0}
 #hurt{position:absolute;inset:0;background:#f00;opacity:0;transition:opacity .15s}
 #toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);font-size:28px;font-weight:700;opacity:0;transition:opacity .3s}
 #menu{position:fixed;inset:0;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
@@ -27,7 +28,7 @@ canvas{display:block}
 "cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"}}</script>
 </head><body>
 <div id="hud"><div id="xh"><i id="xb"></i><i id="xo"></i></div><div id="lvl"></div><div id="hint"></div>
-<div id="hp"><b id="hpf"></b></div><div id="hurt"></div><div id="toast"></div></div>
+<div id="hp"><b id="hpf"></b></div><div id="hurt"></div><div id="fade"></div><div id="toast"></div></div>
 <div id="menu"><h1 id="mt">portal-ish</h1>
 <p>wasd move · space jump · e grab/drop · lmb blue · rmb orange · esc pause</p>
 <div id="grid"></div><button id="resume" type="button">resume (locks mouse)</button></div>
