@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>portal-ish</title>
+<style>
+html,body{margin:0;height:100%;overflow:hidden;background:#111;color:#fff;font:15px system-ui,sans-serif}
+canvas{display:block}
+#hud{position:fixed;inset:0;pointer-events:none}
+#xh{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;gap:6px}
+#xh i{width:10px;height:10px;border-radius:50%;border:2px solid;box-sizing:border-box}
+#xb{border-color:#2a8cff}#xo{border-color:#ff8a1e}
+#xb.on{background:#2a8cff}#xo.on{background:#ff8a1e}
+#lvl{position:absolute;left:16px;top:12px;font-weight:700}
+#hint{position:absolute;left:16px;top:36px;max-width:420px;opacity:.8}
+#hp{position:absolute;left:16px;bottom:16px;width:180px;height:10px;background:#0008;border:1px solid #fff6}
+#hpf{display:block;height:100%;width:100%;background:#e44}
+#hurt{position:absolute;inset:0;background:#f00;opacity:0;transition:opacity .15s}
+#toast{position:absolute;left:50%;top:20%;transform:translateX(-50%);font-size:28px;font-weight:700;opacity:0;transition:opacity .3s}
+#menu{position:fixed;inset:0;background:#000c;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px}
+#grid{display:grid;grid-template-columns:repeat(5,52px);gap:8px}
+#grid button,#resume{font:inherit;padding:10px;background:#223;color:#fff;border:1px solid #88a;cursor:pointer}
+#grid button:disabled{opacity:.3;cursor:default}
+</style>
+<script type="importmap">{"imports":{
+"three":"https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+"three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+"cannon-es":"https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"}}</script>
+</head><body>
+<div id="hud"><div id="xh"><i id="xb"></i><i id="xo"></i></div><div id="lvl"></div><div id="hint"></div>
+<div id="hp"><b id="hpf"></b></div><div id="hurt"></div><div id="toast"></div></div>
+<div id="menu"><h1 id="mt">portal-ish</h1>
+<p>wasd move · space jump · e grab/drop · lmb blue · rmb orange · esc pause</p>
+<div id="grid"></div><button id="resume" type="button">resume (locks mouse)</button></div>
+<script type="module" src="main.js"></script>
+</body></html>
