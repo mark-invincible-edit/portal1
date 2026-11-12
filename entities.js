@@ -10,7 +10,7 @@ class Prop{ // physics body + model, grabbable
   update(){this.sync()}
 }
 export class Cube extends Prop{ // kind 'radio' = decorative, grabbable, never presses buttons
-  constructor(c,p,kind='cube'){const r=kind==='radio';super(c,p,r?[.25,.2,.12]:[.25,.25,.25],r?1:2,r?'radio':'cube',r?0x884422:0x99aabb);this.presses=!r}
+  constructor(c,p,kind='cube'){const r=kind==='radio';super(c,p,r?[.25,.2,.12]:[.5,.5,.5],r?1:3,r?'radio':'cube',r?0x884422:0x99aabb);this.presses=!r}
 }
 export class Turret extends Prop{
   constructor(c,d){super(c,d.p,[.3,.6,.3],3,'turret',0xcccccc);this.home=d.yaw||0;this.yaw=this.home;this.obj.rotation.y=YAW_OFF;this.warned={};this.cur=null;
