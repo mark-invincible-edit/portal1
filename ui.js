@@ -6,6 +6,7 @@ export const ui={
   hp(h){$('hpf').style.width=Math.max(0,h)+'%'},
   level(i,l){$('lvl').textContent=`${i+1}. ${l.name}`;$('hint').textContent=l.hint||''},
   portals(b,o){$('xb').className=b?'on':'';$('xo').className=o?'on':''},
+  fade(a){$('fade').style.opacity=a},
   hurt(){const e=$('hurt');e.style.opacity=.5;setTimeout(()=>e.style.opacity=0,120)},
   toast(m){const e=$('toast');e.textContent=m;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1100)}
 };
