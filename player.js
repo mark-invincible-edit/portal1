@@ -1,11 +1,11 @@
 import * as THREE from 'three';
 import * as CANNON from 'cannon-es';
-const GUN_YAW=Math.PI; // model forward axis unknown: set to 0 if the gun points back at you
+const GUN_YAW=0; // model forward axis unknown: set to 0 if the gun points back at you
 export class Player{
   constructor(c){this.c=c;this.k={};this.yaw=0;this.pitch=0;this.h=100;this.held=null;this.since=0;this.rr=new CANNON.RaycastResult();
     this.body=new CANNON.Body({mass:5,shape:new CANNON.Sphere(.5),material:c.pmat,fixedRotation:true,linearDamping:.01});
     this.body.collisionFilterGroup=2;c.world.addBody(this.body);
-    this.gun=c.model('portalGun',.5,0x8899aa,[.1,.12,.5]).obj;this.gun.rotation.y=GUN_YAW;c.gun=this.gun;c.camera.add(this.gun);
+    this.gun=c.model('portalGun',.75,0x8899aa,[.15,.18,.75]).obj;this.gun.rotation.y=GUN_YAW;c.gun=this.gun;c.camera.add(this.gun);
     addEventListener('keydown',e=>{this.k[e.code]=1;if(e.code==='KeyE'&&this.locked())this.held?this.drop():this.grab()});
     addEventListener('keyup',e=>this.k[e.code]=0);
     addEventListener('mousemove',e=>{if(!this.locked())return;this.yaw-=e.movementX*.0022;this.pitch=Math.max(-1.5,Math.min(1.5,this.pitch-e.movementY*.0022))});
@@ -27,10 +27,10 @@ export class Player{
     if(this.grounded){v.x=wx;v.z=wz;if(k.Space)v.y=8}
     else{const m=Math.max(Math.hypot(v.x,v.z),6);v.x+=wx*dt*4;v.z+=wz*dt*4;const s2=Math.hypot(v.x,v.z);if(s2>m){v.x*=m/s2;v.z*=m/s2}} // air control never kills fling momentum
     this.since+=dt;if(this.since>4&&this.h<100){this.h=Math.min(100,this.h+dt*10);this.c.ui.hp(this.h)}
-    if(this.held){const h=this.held.body,t=this.eye().addScaledVector(this.dir(),1.9);t.y-=.3;
+    if(this.held){const h=this.held.body,t=this.eye().addScaledVector(this.dir(),2.4);t.y-=.3;
       const dx=t.x-h.position.x,dy=t.y-h.position.y,dz=t.z-h.position.z;
       if(Math.hypot(dx,dy,dz)>4)this.drop();else{h.velocity.set(dx*12,dy*12,dz*12);h.angularVelocity.set(0,0,0);h.quaternion.setFromEuler(0,this.yaw,0)}}
-    const t=performance.now()/1000;this.gun.position.set(.25+Math.sin(t*1.3)*.004,-.3+Math.sin(t*1.9)*.006,-.55)}
+    const t=performance.now()/1000;this.gun.position.set(.3+Math.sin(t*1.3)*.004,-.34+Math.sin(t*1.9)*.006,-.65)}
   syncCam(){const p=this.body.position,c=this.c.camera;c.position.set(p.x,p.y+1,p.z);c.rotation.set(this.pitch,this.yaw,0,'YXZ');c.updateMatrixWorld()}
   onTeleport(M){const f=this.dir().transformDirection(M);this.yaw=Math.atan2(-f.x,-f.z);this.pitch=Math.max(-1.5,Math.min(1.5,Math.asin(f.y))); // roll is dropped (limitation)
     this.syncCam()}
