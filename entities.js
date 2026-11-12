@@ -37,7 +37,7 @@ export class Turret extends Prop{
       case'idle':if(sees){this.go('deploy','deploy',false);c.sfx('turretSpot')}break;
       case'deploy':if(this.t<=0){this.state='alert';this.t=.4;this.play('idlealert',true)}break;
       case'alert':if(sees){this.lost=0;if(this.t<=0){this.state='fire';this.play('fire',true)}}else if((this.lost+=dt)>1.5){this.go('retract','retract',false);c.sfx('turretRetract')}break;
-      case'fire':if(sees){this.lost=0;this.shot-=dt;if(this.shot<=0){this.shot=.18;c.flash(mz,0xffddaa,.09,'muzzleFlash');c.sfx('turretFire');
+      case'fire':if(sees){this.lost=0;this.shot-=dt;if(this.shot<=0){this.shot=.18;c.flash(mz,0xffddaa,.09,'muzzleFlash');c.tracer(mz,eye.clone().add(new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5)));c.sfx('turretFire');
           if(Math.random()<Math.max(.1,.9-dist*.05))P.hurt(5)}} // accuracy falls off with distance
         else if((this.lost+=dt)>.6){this.go('retract','retract',false);c.sfx('turretRetract')}break;
       case'retract':if(this.t<=0)this.go('idle','idle',true);break}}
