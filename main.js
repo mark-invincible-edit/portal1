@@ -71,17 +71,19 @@ const TEX={floor:'floor',wall:'wall',metal:'metalWall'},COLS={floor:0x777777,wal
 function boxMat(t,[w,h,d]){const f=(a,b)=>{const m=new THREE.MeshStandardMaterial({color:tex[TEX[t]]?0xffffff:COLS[t]});if(tex[TEX[t]]){const x=tex[TEX[t]].clone();x.needsUpdate=true;x.repeat.set(a/2,b/2);m.map=x}return m};
   return [f(d,h),f(d,h),f(w,d),f(w,d),f(w,h),f(w,h)]}
 
-let cur=0,lvl=null,dead=false,done=false;
+let cur=0,lvl=null,dead=false,ride=0,fo=0,nxt=false;
 function clearLevel(){if(!lvl)return;lvl.bodies.forEach(b=>world.removeBody(b));scene.remove(lvl.group);ctx.portals.clear();ctx.ui.portals(false,false)}
-function loadLevel(i){clearLevel();cur=i;done=false;const L=LEVELS[i];lvl={group:new THREE.Group(),bodies:[],ents:[],doors:[],buttons:[]};scene.add(lvl.group);
+function loadLevel(i){clearLevel();cur=i;ride=0;const L=LEVELS[i];lvl={group:new THREE.Group(),bodies:[],ents:[],doors:[],buttons:[]};scene.add(lvl.group);
   ctx.levelMeshes=[];ctx.dyn=[ctx.player.body];ctx.grab=[];
-  for(const s of L.surfaces){const m=new THREE.Mesh(new THREE.BoxGeometry(...s.s),boxMat(s.t,s.s));m.position.set(...s.p);m.userData.portalable=s.t!=='metal';lvl.group.add(m);ctx.levelMeshes.push(m);
+  const E=L.exit,cs=(p,s)=>({t:'metal',p,s}),cab=[cs([E[0]-1.75,E[1]+1.75,E[2]+.25],[.5,3.5,3.5]),cs([E[0]+1.75,E[1]+1.75,E[2]+.25],[.5,3.5,3.5]),cs([E[0],E[1]+1.75,E[2]-1.75],[3.5,3.5,.5]),cs([E[0],E[1]+3.75,E[2]+.25],[3.5,.5,3.5]),cs([E[0],E[1]+3.25,E[2]+1.75],[3,.5,.5])]; // elevator cab built around L.exit, door faces +z
+  for(const s of [...L.surfaces,...cab]){const m=new THREE.Mesh(new THREE.BoxGeometry(...s.s),boxMat(s.t,s.s));m.position.set(...s.p);m.userData.portalable=s.t!=='metal';lvl.group.add(m);ctx.levelMeshes.push(m);
     const b=new CANNON.Body({mass:0,material:mat,shape:new CANNON.Box(new CANNON.Vec3(s.s[0]/2,s.s[1]/2,s.s[2]/2))});b.position.set(...s.p);world.addBody(b);lvl.bodies.push(b)}
   const add=e=>{lvl.ents.push(e);lvl.group.add(e.group);if(e.body){world.addBody(e.body);lvl.bodies.push(e.body);if(!e.kin)ctx.dyn.push(e.body)}if(e.grabbable)ctx.grab.push(e);return e};
   (L.cubes||[]).forEach(p=>add(new Cube(ctx,p)));(L.radios||[]).forEach(p=>add(new Cube(ctx,p,'radio')));(L.turrets||[]).forEach(d=>add(new Turret(ctx,d)));
   (L.buttons||[]).forEach(d=>lvl.buttons.push(add(new Button(ctx,d))));
   (L.doors||[]).forEach(d=>{const o=add(new Door(ctx,d));lvl.doors.push(o);ctx.levelMeshes.push(o.mesh)});
-  const ex=new THREE.Mesh(new THREE.CylinderGeometry(1,1,.1,32),new THREE.MeshStandardMaterial({color:0x22cc66,emissive:0x116633}));ex.position.set(L.exit[0],L.exit[1]+.05,L.exit[2]);lvl.group.add(ex);
+  const ed=new Door(ctx,{id:'elev',p:[E[0],E[1]+1.5,E[2]+1.75],s:[3,3,.5]});lvl.elev=add(ed);lvl.doors.push(ed);ctx.levelMeshes.push(ed.mesh);
+  const el=new THREE.PointLight(0x99ffcc,25,8);el.position.set(E[0],E[1]+3,E[2]);lvl.group.add(el);
   (L.lights||[]).forEach(p=>{const l=new THREE.PointLight(0xfff2e0,40,40,2);l.position.set(...p);lvl.group.add(l)});
   ctx.player.respawn(L.spawn,L.yaw);ctx.player.syncCam();ui.level(i,L)}
 ctx.die=()=>{dead=true};
@@ -95,13 +97,16 @@ addEventListener('resize',()=>{renderer.setSize(innerWidth,innerHeight);camera.a
 
 let last=performance.now();
 function loop(t){requestAnimationFrame(loop);const dt=Math.min((t-last)/1000,.05);last=t;
-  if(running){const P=ctx.player;P.update(dt);world.step(1/60,dt,3);ctx.portals.teleport(dt);P.syncCam();
+  if(running){const P=ctx.player;if(ride<=0)P.update(dt);world.step(1/60,dt,3);ctx.portals.teleport(dt);P.syncCam();if(ride>0)camera.position.y+=(Math.random()-.5)*.04;
     for(const e of lvl.ents)e.update(dt);
-    for(const d of lvl.doors){const bs=lvl.buttons.filter(b=>(b.d.doors||[]).includes(d.d.id));d.set(bs.length>0&&bs.every(b=>b.pressed))}
+    for(const d of lvl.doors){if(d===lvl.elev&&ride>0){d.set(false);continue}const bs=lvl.buttons.filter(b=>(b.d.doors||[]).includes(d.d.id));d.set(bs.length>0&&bs.every(b=>b.pressed))}
     ctx.fx=ctx.fx.filter(f=>{f.t-=dt;if(f.t<=0)scene.remove(f.s);return f.t>0});
     const L=LEVELS[cur],p=P.body.position;
-    if(!done&&Math.hypot(p.x-L.exit[0],p.z-L.exit[2])<1.2&&Math.abs(p.y-.5-L.exit[1])<1.5){done=true;ui.toast('level complete');
-      setTimeout(()=>{if(cur+1<LEVELS.length)loadLevel(cur+1);else{document.exitPointerLock();ui.menu(true,'more levels coming')}},1200)}
+    const E=L.exit;
+    if(ride<=0&&lvl.elev.k>.9&&Math.abs(p.x-E[0])<1.2&&Math.abs(p.z-E[2])<1.2&&Math.abs(p.y-.5-E[1])<1){ride=3;P.drop();P.body.velocity.set(0,0,0);ui.toast('going up')}
+    if(ride>0){ride-=dt;P.body.velocity.x=P.body.velocity.z=0;ui.fade(ride<1.2?1-Math.max(ride,0)/1.2:0);if(ride<=0){ride=0;nxt=true}}
+    else if(fo>0){fo=Math.max(0,fo-dt);ui.fade(fo)}
+    if(nxt){nxt=false;if(cur+1<LEVELS.length){loadLevel(cur+1);fo=1;ui.fade(1)}else{document.exitPointerLock();ui.menu(true,'more levels coming');ui.fade(0)}}
     if(p.y<-20)dead=true;
     if(dead){dead=false;loadLevel(cur)}}
   ctx.portals.render();renderer.render(scene,camera)}
