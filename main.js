@@ -58,11 +58,16 @@ world.addContactMaterial(new CANNON.ContactMaterial(mat,mat,{friction:.3,restitu
 world.addContactMaterial(new CANNON.ContactMaterial(pmat,mat,{friction:0,restitution:0}));
 
 const ctx={scene,camera,renderer,world,mat,pmat,tex,sfx,ui,fx:[],levelMeshes:[],dyn:[],grab:[]};
-ctx.model=(key,size,col,fb)=>{const g=models[key],r=new THREE.Group();let clips=[];
-  if(g){const m=SkeletonUtils.clone(g.scene),b=new THREE.Box3().setFromObject(m),z=b.getSize(new THREE.Vector3());
-    m.scale.setScalar(size/Math.max(z.x,z.y,z.z,1e-4));b.setFromObject(m);m.position.set(-(b.min.x+b.max.x)/2,-b.min.y,-(b.min.z+b.max.z)/2);r.add(m);clips=g.animations}
-  else{const m=new THREE.Mesh(new THREE.BoxGeometry(...fb),new THREE.MeshStandardMaterial({color:col}));m.position.y=fb[1]/2;r.add(m)}
+ctx.model=(key,size,col,fb)=>{const g=models[key],r=new THREE.Group();let clips=[],ok=false;
+  if(g){const m=SkeletonUtils.clone(g.scene);m.traverse(o=>{o.frustumCulled=false}); // skinned meshes get culled by their bind-pose bounds
+    const bx=()=>{m.updateMatrixWorld(true);return new THREE.Box3().setFromObject(m,true)}; // precise = real skinned vertices
+    let b=bx();const z=b.getSize(new THREE.Vector3()),mx=Math.max(z.x,z.y,z.z);
+    if(isFinite(mx)&&mx>1e-6){m.scale.setScalar(size/mx);b=bx();m.position.set(-(b.min.x+b.max.x)/2,-b.min.y,-(b.min.z+b.max.z)/2);r.add(m);clips=g.animations;ok=true;
+      console.log(`[fit] ${key} raw size`,z.toArray().map(n=>+n.toFixed(3)),'scale',+(size/mx).toFixed(4))}
+    else console.warn(`[fit] ${key} has an unusable bounding box, using fallback box`)}
+  if(!ok){const m=new THREE.Mesh(new THREE.BoxGeometry(...fb),new THREE.MeshStandardMaterial({color:col}));m.position.y=fb[1]/2;r.add(m)}
   return{obj:r,clips}};
+ctx.tracer=(a,b)=>{const l=new THREE.Line(new THREE.BufferGeometry().setFromPoints([a,b]),new THREE.LineBasicMaterial({color:0xffaa44}));scene.add(l);ctx.fx.push({s:l,t:.07})};
 ctx.flash=(pos,col,life,key)=>{const s=new THREE.Sprite(new THREE.SpriteMaterial({map:key?tex[key]:null,color:col,transparent:true,depthTest:false}));s.position.copy(pos);s.scale.setScalar(key?.6:.4);scene.add(s);ctx.fx.push({s,t:life})};
 ctx.player=new Player(ctx);ctx.portals=new Portals(ctx);
 ctx.pressers=()=>[ctx.player.body,...ctx.grab.filter(g=>g.presses).map(g=>g.body)];
